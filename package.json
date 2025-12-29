@@ -1,0 +1,13 @@
+{
+  "name": "ranking-server",
+  "version": "1.0.0",
+  "description": "Servidor de ranking RealTrends para ML1",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "playwright": "^1.40.0"
+  }
+}
