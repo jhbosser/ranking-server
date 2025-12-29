@@ -31,22 +31,36 @@ async function ensureBrowser() {
 async function login() {
   console.log('Fazendo login no RealTrends...');
   
-  await page.goto('https://br.real-trends.com/login/', { waitUntil: 'load', timeout: 30000 });
-  await page.waitForTimeout(4000);
+  await page.goto('https://br.real-trends.com/login/', { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForTimeout(3000);
+  
+  // Aguardar campos de login aparecerem
+  await page.waitForSelector('input#username', { timeout: 10000 });
   
   await page.fill('input#username', REALTRENDS_EMAIL);
   await page.fill('input#password', REALTRENDS_PASSWORD);
   
-  await page.waitForTimeout(500);
-  await page.click('button:has-text("Acessar")');
+  await page.waitForTimeout(1000);
   
-  await page.waitForTimeout(5000);
+  // Tentar diferentes seletores para o botão
+  const submitBtn = await page.locator('button:has-text("Acessar"), button:has-text("Entrar"), button[type="submit"]').first();
+  await submitBtn.click();
   
-  const currentUrl = page.url();
-  if (currentUrl.includes('/login')) {
-    throw new Error('Falha no login - verifique credenciais');
+  // Aguardar navegação
+  try {
+    await page.waitForURL((url) => !url.href.includes('/login'), { timeout: 30000 });
+  } catch (e) {
+    // Verificar se ainda está na página de login
+    const currentUrl = page.url();
+    console.log('URL atual:', currentUrl);
+    if (currentUrl.includes('/login')) {
+      // Tentar pegar mensagem de erro
+      const errorText = await page.locator('.error, .alert, [class*="error"]').textContent().catch(() => '');
+      throw new Error(`Falha no login - ${errorText || 'verifique credenciais'}`);
+    }
   }
   
+  await page.waitForTimeout(2000);
   console.log('Login OK!');
   isLoggedIn = true;
   return true;
